@@ -55,10 +55,20 @@ def get_display_name(tag: str) -> str:
     return TAG_TO_GROUP.get(tag, tag)
 
 
+def country_exists(entry: dict) -> bool:
+    """Check if a country actually exists (not just a placeholder)."""
+    # A country exists if it has population > 0
+    pop = entry.get('population_total', 0)
+    if isinstance(pop, dict):
+        pop = pop.get('total', 0)
+    return pop > 0
+
+
 def load_country_group(group_or_tag: str) -> list[dict]:
     """
     Load country data, merging multiple tags if they form a group.
     For example, 'GER' will load and merge PRU, NGF, and GER data.
+    Only includes data from tags that actually exist (population > 0).
     """
     # Get the tags to load
     if group_or_tag in TAG_GROUPS:
@@ -68,29 +78,30 @@ def load_country_group(group_or_tag: str) -> list[dict]:
     else:
         tags = [group_or_tag]
 
-    # Load all available data
+    # Load all available data, indexed by date
+    # For each date, store (tag_index, entry) so we can pick the right one
     all_data = {}
-    for tag in tags:
+
+    for tag_idx, tag in enumerate(tags):
         try:
             data = load_country(tag)
             for entry in data:
-                if 'treasury' in entry:  # Valid entry
+                # Only include entries where the country actually exists
+                if 'treasury' in entry and country_exists(entry):
                     date = entry['date']
-                    # Use this entry if we don't have data for this date yet,
-                    # or if this is a later tag in the succession
                     if date not in all_data:
-                        all_data[date] = entry
+                        all_data[date] = (tag_idx, entry)
                     else:
-                        # Later tags take precedence (GER over NGF over PRU)
-                        current_tag_idx = tags.index(tag) if tag in tags else 0
-                        # Check what tag the existing data is from (not stored, so overwrite)
-                        all_data[date] = entry
+                        # Later tags in succession take precedence (GER > NGF > PRU)
+                        existing_tag_idx, _ = all_data[date]
+                        if tag_idx > existing_tag_idx:
+                            all_data[date] = (tag_idx, entry)
         except FileNotFoundError:
             continue
 
-    # Sort by date and return as list
+    # Sort by date and return just the entries (not the tag index)
     sorted_dates = sorted(all_data.keys(), key=lambda d: parse_date(d))
-    return [all_data[d] for d in sorted_dates]
+    return [all_data[d][1] for d in sorted_dates]
 
 
 def parse_date(date_str: str) -> datetime:
