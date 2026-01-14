@@ -165,6 +165,32 @@ def extract_world_market(data: dict) -> WorldMarketData:
     return result
 
 
+def safe_float(value, default=0.0) -> float:
+    """Safely convert a value to float."""
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        try:
+            return float(value)
+        except ValueError:
+            return default
+    return default
+
+
+def safe_int(value, default=0) -> int:
+    """Safely convert a value to int."""
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float):
+        return int(value)
+    if isinstance(value, str):
+        try:
+            return int(float(value))
+        except ValueError:
+            return default
+    return default
+
+
 def extract_pop_from_block(pop_type: str, pop_block: dict) -> dict:
     """Extract data from a single POP block."""
     if not isinstance(pop_block, dict):
@@ -172,15 +198,15 @@ def extract_pop_from_block(pop_type: str, pop_block: dict) -> dict:
 
     return {
         'type': pop_type,
-        'size': pop_block.get('size', 0),
-        'money': pop_block.get('money', 0.0),
-        'bank': pop_block.get('bank', 0.0),
-        'life_needs': pop_block.get('life_needs', 0.0),
-        'everyday_needs': pop_block.get('everyday_needs', 0.0),
-        'luxury_needs': pop_block.get('luxury_needs', 0.0),
-        'literacy': pop_block.get('literacy', 0.0),
-        'con': pop_block.get('con', 0.0),
-        'mil': pop_block.get('mil', 0.0),
+        'size': safe_int(pop_block.get('size', 0)),
+        'money': safe_float(pop_block.get('money', 0.0)),
+        'bank': safe_float(pop_block.get('bank', 0.0)),
+        'life_needs': safe_float(pop_block.get('life_needs', 0.0)),
+        'everyday_needs': safe_float(pop_block.get('everyday_needs', 0.0)),
+        'luxury_needs': safe_float(pop_block.get('luxury_needs', 0.0)),
+        'literacy': safe_float(pop_block.get('literacy', 0.0)),
+        'con': safe_float(pop_block.get('con', 0.0)),
+        'mil': safe_float(pop_block.get('mil', 0.0)),
     }
 
 
@@ -188,15 +214,15 @@ def extract_factory_data(building_block: dict) -> FactoryData:
     """Extract factory data from a state_buildings block."""
     factory = FactoryData()
 
-    factory.name = building_block.get('building', '')
-    factory.level = building_block.get('level', 0)
-    factory.money = building_block.get('money', 0.0)
-    factory.last_income = building_block.get('last_income', 0.0)
-    factory.last_spending = building_block.get('last_spending', 0.0)
-    factory.wages_paid = building_block.get('pops_paychecks', 0.0)
-    factory.unprofitable_days = building_block.get('unprofitable_days', 0)
+    factory.name = str(building_block.get('building', ''))
+    factory.level = safe_int(building_block.get('level', 0))
+    factory.money = safe_float(building_block.get('money', 0.0))
+    factory.last_income = safe_float(building_block.get('last_income', 0.0))
+    factory.last_spending = safe_float(building_block.get('last_spending', 0.0))
+    factory.wages_paid = safe_float(building_block.get('pops_paychecks', 0.0))
+    factory.unprofitable_days = safe_int(building_block.get('unprofitable_days', 0))
     factory.subsidised = building_block.get('subsidised', False)
-    factory.produces = building_block.get('produces', 0.0)
+    factory.produces = safe_float(building_block.get('produces', 0.0))
 
     # Extract employment
     employment = building_block.get('employment', {})
@@ -207,8 +233,8 @@ def extract_factory_data(building_block: dict) -> FactoryData:
                 if isinstance(emp, dict):
                     pop_id = emp.get('province_pop_id', {})
                     if isinstance(pop_id, dict):
-                        pop_type_id = pop_id.get('type', -1)
-                        count = emp.get('count', 0)
+                        pop_type_id = safe_int(pop_id.get('type', -1), -1)
+                        count = safe_int(emp.get('count', 0))
                         if pop_type_id in (5, 6):  # clerks
                             factory.employed_clerks += count
                         elif pop_type_id == 7:  # craftsmen
@@ -221,8 +247,8 @@ def extract_rgo_data(rgo_block: dict) -> RGOData:
     """Extract RGO data from a province's rgo block."""
     rgo = RGOData()
 
-    rgo.goods_type = rgo_block.get('goods_type', '')
-    rgo.last_income = rgo_block.get('last_income', 0.0)
+    rgo.goods_type = str(rgo_block.get('goods_type', ''))
+    rgo.last_income = safe_float(rgo_block.get('last_income', 0.0))
 
     # Extract employment
     employment = rgo_block.get('employment', {})
@@ -231,7 +257,7 @@ def extract_rgo_data(rgo_block: dict) -> RGOData:
         if isinstance(employees, list):
             for emp in employees:
                 if isinstance(emp, dict):
-                    count = emp.get('count', 0)
+                    count = safe_int(emp.get('count', 0))
                     rgo.total_employed += count
 
     return rgo
@@ -271,46 +297,46 @@ def extract_country_data(tag: str, country_block: dict, provinces: dict[int, dic
     country.tag = tag
 
     # Basic data
-    country.treasury = country_block.get('money', 0.0)
-    country.prestige = country_block.get('prestige', 0.0)
-    country.infamy = country_block.get('badboy', 0.0)
-    country.tax_base = country_block.get('tax_base', 0.0)
+    country.treasury = safe_float(country_block.get('money', 0.0))
+    country.prestige = safe_float(country_block.get('prestige', 0.0))
+    country.infamy = safe_float(country_block.get('badboy', 0.0))
+    country.tax_base = safe_float(country_block.get('tax_base', 0.0))
     country.civilized = country_block.get('civilized', True)
 
     # Bank data
     bank = country_block.get('bank', {})
     if isinstance(bank, dict):
-        country.bank_reserves = bank.get('money', 0.0)
-        country.bank_money_lent = bank.get('money_lent', 0.0)
+        country.bank_reserves = safe_float(bank.get('money', 0.0))
+        country.bank_money_lent = safe_float(bank.get('money_lent', 0.0))
 
     # Tax data
     rich_tax = country_block.get('rich_tax', {})
     if isinstance(rich_tax, dict):
-        country.rich_tax_rate = rich_tax.get('current', 0.0)
-        country.rich_tax_income = rich_tax.get('total', 0.0)
+        country.rich_tax_rate = safe_float(rich_tax.get('current', 0.0))
+        country.rich_tax_income = safe_float(rich_tax.get('total', 0.0))
 
     middle_tax = country_block.get('middle_tax', {})
     if isinstance(middle_tax, dict):
-        country.middle_tax_rate = middle_tax.get('current', 0.0)
-        country.middle_tax_income = middle_tax.get('total', 0.0)
+        country.middle_tax_rate = safe_float(middle_tax.get('current', 0.0))
+        country.middle_tax_income = safe_float(middle_tax.get('total', 0.0))
 
     poor_tax = country_block.get('poor_tax', {})
     if isinstance(poor_tax, dict):
-        country.poor_tax_rate = poor_tax.get('current', 0.0)
-        country.poor_tax_income = poor_tax.get('total', 0.0)
+        country.poor_tax_rate = safe_float(poor_tax.get('current', 0.0))
+        country.poor_tax_income = safe_float(poor_tax.get('total', 0.0))
 
     # Spending
     edu = country_block.get('education_spending', {})
     if isinstance(edu, dict):
-        country.education_spending = edu.get('settings', 0.0)
+        country.education_spending = safe_float(edu.get('settings', 0.0))
 
     mil = country_block.get('military_spending', {})
     if isinstance(mil, dict):
-        country.military_spending = mil.get('settings', 0.0)
+        country.military_spending = safe_float(mil.get('settings', 0.0))
 
     social = country_block.get('social_spending', {})
     if isinstance(social, dict):
-        country.social_spending = social.get('settings', 0.0)
+        country.social_spending = safe_float(social.get('settings', 0.0))
 
     # States and factories
     states = country_block.get('state', [])
