@@ -200,6 +200,138 @@ def plot_population_composition():
     print('Saved: global_population_composition.png')
 
 
+def plot_pop_vs_treasury_global():
+    """Plot global POP wealth vs total government treasuries."""
+    setup_style()
+
+    # Load full economic data to get treasury totals
+    data = load_json('economic_data.json')
+
+    dates = []
+    pop_wealth = []
+    treasury_total = []
+
+    for entry in data:
+        dates.append(parse_date(entry['date']))
+
+        # POP wealth = cash + bank savings
+        gs = entry['global_statistics']
+        pop_wealth.append(gs['total_pop_money'] + gs['total_pop_bank_savings'])
+
+        # Sum all country treasuries
+        total_treasury = sum(
+            c.get('treasury', 0)
+            for c in entry['countries'].values()
+            if c.get('treasury', 0) > 0  # Exclude negative treasuries for clarity
+        )
+        treasury_total.append(total_treasury)
+
+    fig, ax = plt.subplots(figsize=(14, 7))
+
+    ax.plot(dates, pop_wealth, label='POP Wealth (Cash + Savings)',
+            color='#2E86AB', linewidth=2)
+    ax.plot(dates, treasury_total, label='Government Treasuries',
+            color='#E63946', linewidth=2)
+
+    ax.set_title('Global POP Wealth vs Government Treasuries')
+    ax.set_xlabel('Year')
+    ax.set_ylabel('Amount (£)')
+
+    format_date_axis(ax, dates)
+    format_large_numbers(ax)
+    ax.legend(loc='best')
+
+    save_chart('global_pop_vs_treasury')
+    print('Saved: global_pop_vs_treasury.png')
+
+
+def plot_pop_vs_treasury_ratio():
+    """Plot ratio of POP wealth to government treasuries over time."""
+    setup_style()
+
+    data = load_json('economic_data.json')
+
+    dates = []
+    ratios = []
+
+    for entry in data:
+        dates.append(parse_date(entry['date']))
+
+        gs = entry['global_statistics']
+        pop_wealth = gs['total_pop_money'] + gs['total_pop_bank_savings']
+
+        total_treasury = sum(
+            c.get('treasury', 0)
+            for c in entry['countries'].values()
+            if c.get('treasury', 0) > 0
+        )
+
+        if total_treasury > 0:
+            ratios.append(pop_wealth / total_treasury)
+        else:
+            ratios.append(0)
+
+    fig, ax = plt.subplots(figsize=(14, 7))
+
+    ax.plot(dates, ratios, color='#2A9D8F', linewidth=2)
+    ax.fill_between(dates, ratios, alpha=0.3, color='#2A9D8F')
+
+    ax.axhline(y=1, color='gray', linestyle='--', alpha=0.5, label='1:1 Ratio')
+
+    ax.set_title('Ratio of POP Wealth to Government Treasuries')
+    ax.set_xlabel('Year')
+    ax.set_ylabel('Ratio (POP Wealth / Treasuries)')
+
+    format_date_axis(ax, dates)
+    ax.legend(loc='best')
+
+    save_chart('global_pop_treasury_ratio')
+    print('Saved: global_pop_treasury_ratio.png')
+
+
+def plot_wealth_composition():
+    """Plot stacked area of POP cash, POP savings, and government treasuries."""
+    setup_style()
+
+    data = load_json('economic_data.json')
+
+    dates = []
+    pop_cash = []
+    pop_savings = []
+    treasuries = []
+
+    for entry in data:
+        dates.append(parse_date(entry['date']))
+
+        gs = entry['global_statistics']
+        pop_cash.append(gs['total_pop_money'])
+        pop_savings.append(gs['total_pop_bank_savings'])
+
+        total_treasury = sum(
+            c.get('treasury', 0)
+            for c in entry['countries'].values()
+            if c.get('treasury', 0) > 0
+        )
+        treasuries.append(total_treasury)
+
+    fig, ax = plt.subplots(figsize=(14, 7))
+
+    ax.stackplot(dates, pop_cash, pop_savings, treasuries,
+                 labels=['POP Cash', 'POP Bank Savings', 'Government Treasuries'],
+                 colors=['#2E86AB', '#A23B72', '#E63946'], alpha=0.8)
+
+    ax.set_title('World Money Distribution')
+    ax.set_xlabel('Year')
+    ax.set_ylabel('Amount (£)')
+
+    format_date_axis(ax, dates)
+    format_large_numbers(ax)
+    ax.legend(loc='upper left')
+
+    save_chart('global_wealth_composition')
+    print('Saved: global_wealth_composition.png')
+
+
 def plot_all():
     """Generate all global visualizations."""
     print("Generating global statistics charts...")
@@ -209,6 +341,9 @@ def plot_all():
     plot_social_indicators()
     plot_population_by_type()
     plot_population_composition()
+    plot_pop_vs_treasury_global()
+    plot_pop_vs_treasury_ratio()
+    plot_wealth_composition()
     print("Done!")
 
 

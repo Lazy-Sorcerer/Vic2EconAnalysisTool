@@ -348,6 +348,130 @@ def plot_tax_comparison():
     print('Saved: country_tax_income.png')
 
 
+def plot_pop_wealth_comparison():
+    """Compare POP wealth (cash + bank savings) across countries."""
+    setup_style()
+
+    fig, ax = plt.subplots(figsize=(14, 7))
+
+    for tag in GREAT_POWERS:
+        data = load_country_group(tag)
+        if not data:
+            continue
+
+        valid_entries = [d for d in data if 'pop_money' in d]
+        if not valid_entries:
+            continue
+
+        dates = [parse_date(d['date']) for d in valid_entries]
+        values = [d.get('pop_money', 0) + d.get('pop_bank_savings', 0) for d in valid_entries]
+
+        color = get_country_color(tag)
+        ax.plot(dates, values, label=tag, linewidth=2, color=color)
+
+    ax.set_title('POP Wealth Comparison (Cash + Bank Savings)')
+    ax.set_xlabel('Year')
+    ax.set_ylabel('Wealth (£)')
+
+    if dates:
+        format_date_axis(ax, dates)
+    format_large_numbers(ax)
+    ax.legend(loc='best')
+
+    save_chart('country_pop_wealth')
+    print('Saved: country_pop_wealth.png')
+
+
+def plot_pop_vs_treasury_by_country():
+    """Compare POP wealth vs treasury for each major power."""
+    setup_style()
+
+    # Select subset of countries for readability
+    countries = ['ENG', 'FRA', 'GER', 'RUS', 'USA']
+
+    fig, axes = plt.subplots(2, 3, figsize=(18, 10))
+    fig.suptitle('POP Wealth vs Government Treasury by Country', fontsize=14)
+
+    axes = axes.flatten()
+
+    for idx, tag in enumerate(countries):
+        if idx >= len(axes):
+            break
+
+        ax = axes[idx]
+        data = load_country_group(tag)
+
+        if not data:
+            ax.set_title(f'{tag} - No Data')
+            continue
+
+        valid_entries = [d for d in data if 'treasury' in d and 'pop_money' in d]
+        if not valid_entries:
+            ax.set_title(f'{tag} - No Data')
+            continue
+
+        dates = [parse_date(d['date']) for d in valid_entries]
+        treasury = [d.get('treasury', 0) for d in valid_entries]
+        pop_wealth = [d.get('pop_money', 0) + d.get('pop_bank_savings', 0) for d in valid_entries]
+
+        ax.plot(dates, pop_wealth, label='POP Wealth', color='#2E86AB', linewidth=2)
+        ax.plot(dates, treasury, label='Treasury', color='#E63946', linewidth=2)
+
+        ax.set_title(tag)
+        format_date_axis(ax, dates)
+        format_large_numbers(ax)
+        ax.legend(loc='best', fontsize=8)
+
+    # Hide unused subplot
+    if len(countries) < len(axes):
+        for idx in range(len(countries), len(axes)):
+            axes[idx].axis('off')
+
+    save_chart('country_pop_vs_treasury')
+    print('Saved: country_pop_vs_treasury.png')
+
+
+def plot_wealth_ratio_comparison():
+    """Compare ratio of POP wealth to treasury across countries."""
+    setup_style()
+
+    fig, ax = plt.subplots(figsize=(14, 7))
+
+    for tag in GREAT_POWERS[:8]:  # Limit to 8 for readability
+        data = load_country_group(tag)
+        if not data:
+            continue
+
+        valid_entries = [d for d in data if 'treasury' in d and 'pop_money' in d]
+        if not valid_entries:
+            continue
+
+        dates = []
+        ratios = []
+        for d in valid_entries:
+            treasury = d.get('treasury', 0)
+            pop_wealth = d.get('pop_money', 0) + d.get('pop_bank_savings', 0)
+            if treasury > 0:
+                dates.append(parse_date(d['date']))
+                ratios.append(pop_wealth / treasury)
+
+        if dates:
+            color = get_country_color(tag)
+            ax.plot(dates, ratios, label=tag, linewidth=2, color=color)
+
+    ax.axhline(y=1, color='gray', linestyle='--', alpha=0.5)
+    ax.set_title('POP Wealth to Treasury Ratio by Country')
+    ax.set_xlabel('Year')
+    ax.set_ylabel('Ratio (POP Wealth / Treasury)')
+
+    if dates:
+        format_date_axis(ax, dates)
+    ax.legend(loc='best')
+
+    save_chart('country_wealth_ratio')
+    print('Saved: country_wealth_ratio.png')
+
+
 def plot_all():
     """Generate all country comparison visualizations."""
     print("Generating country comparison charts...")
@@ -362,6 +486,11 @@ def plot_all():
     plot_gdp_proxy()
     plot_gdp_per_capita()
     plot_tax_comparison()
+
+    # POP wealth vs treasury comparisons
+    plot_pop_wealth_comparison()
+    plot_pop_vs_treasury_by_country()
+    plot_wealth_ratio_comparison()
 
     # Individual country profiles
     for tag in GREAT_POWERS:

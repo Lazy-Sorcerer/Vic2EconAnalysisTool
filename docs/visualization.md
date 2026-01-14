@@ -63,6 +63,9 @@ python plot_all.py --market --countries
 | `global_social_indicators.png` | Literacy, consciousness, militancy |
 | `global_population_by_type.png` | Population stacked by POP type |
 | `global_population_composition.png` | Population percentages by POP type |
+| `global_pop_vs_treasury.png` | POP wealth vs government treasuries comparison |
+| `global_pop_treasury_ratio.png` | Ratio of POP wealth to treasuries over time |
+| `global_wealth_composition.png` | Stacked area: POP cash, savings, and treasuries |
 
 ### World Market (`--market`)
 
@@ -105,6 +108,9 @@ python plot_all.py --market --countries
 | `country_gdp_proxy.png` | GDP proxy (factory + RGO income) |
 | `country_gdp_per_capita.png` | GDP per capita proxy |
 | `country_tax_income.png` | Total tax income comparison |
+| `country_pop_wealth.png` | POP wealth comparison across countries |
+| `country_pop_vs_treasury.png` | POP wealth vs treasury panels for major powers |
+| `country_wealth_ratio.png` | POP wealth to treasury ratio comparison |
 | `country_profile_[TAG].png` | Multi-panel country profiles |
 
 ## Countries Compared
