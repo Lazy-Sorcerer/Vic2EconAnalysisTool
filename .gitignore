@@ -19,9 +19,9 @@ $RECYCLE.BIN/
 *.lnk
 *.code-workspace
 
-# Claude
+# Claude Code
 .claude/
+CLAUDE.md
 
-# =========================
-# Operating System Files
-# =========================
+# Project files
+saves/
