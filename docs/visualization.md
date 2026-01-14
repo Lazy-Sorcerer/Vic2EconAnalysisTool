@@ -66,6 +66,8 @@ python plot_all.py --market --countries
 
 ### World Market (`--market`)
 
+#### Price Charts
+
 | Chart | Description |
 |-------|-------------|
 | `market_raw_resources.png` | Raw resource prices (coal, iron, grain, etc.) |
@@ -75,7 +77,19 @@ python plot_all.py --market --countries
 | `market_luxury.png` | Luxury resource prices (silk, tea, coffee, etc.) |
 | `market_price_indices.png` | Composite price indices by category |
 | `market_volatility.png` | Price volatility (12-month rolling) |
-| `market_[commodity].png` | Individual commodity charts (coal, iron, steel, grain, cotton) |
+| `market_[commodity].png` | Individual commodity price charts (coal, iron, steel, grain, cotton) |
+
+#### Supply & Demand Charts
+
+| Chart | Description |
+|-------|-------------|
+| `market_supply_raw.png` | Raw resource supply over time |
+| `market_supply_industrial.png` | Industrial goods supply over time |
+| `market_demand_raw.png` | Raw resource demand (units sold) over time |
+| `market_demand_industrial.png` | Industrial goods demand (units sold) over time |
+| `market_balance_raw.png` | Raw resource supply/demand balance (surplus %) |
+| `market_balance_industrial.png` | Industrial goods supply/demand balance (surplus %) |
+| `market_[commodity]_full.png` | Full market analysis (price, supply, demand, comparison) for key commodities |
 
 ### Country Comparisons (`--countries`)
 
@@ -99,10 +113,17 @@ By default, the following Great Powers are compared:
 
 - **ENG** - United Kingdom
 - **FRA** - France
-- **PRU** - Prussia
-- **AUS** - Austria
+- **GER** - Germany (merges PRU → NGF → GER data)
+- **KUK** - Austria-Hungary (merges AUS → SGF → KUK data)
 - **RUS** - Russia
 - **USA** - United States
+- **SPA** - Spain
+- **BRA** - Brazil
+- **TUR** - Ottoman Empire
+- **CHI** - Qing China
+- **JAP** - Japan
+
+Note: Country tag succession is handled automatically. For example, using `GER` will show continuous data from Prussia (PRU) through North German Federation (NGF) to unified Germany (GER).
 
 ## Individual Scripts
 

@@ -272,6 +272,28 @@ def create_time_series(all_data: list[dict], output_dir: Path):
     with open(output_dir / 'world_market_prices.json', 'w', encoding='utf-8') as f:
         json.dump(prices_series, f, indent=2)
 
+    # World market supply over time
+    supply_series = []
+    for entry in all_data:
+        supply_series.append({
+            'date': entry['date'],
+            **entry['world_market']['supply']
+        })
+
+    with open(output_dir / 'world_market_supply.json', 'w', encoding='utf-8') as f:
+        json.dump(supply_series, f, indent=2)
+
+    # World market actual_sold (demand proxy) over time
+    sold_series = []
+    for entry in all_data:
+        sold_series.append({
+            'date': entry['date'],
+            **entry['world_market']['actual_sold']
+        })
+
+    with open(output_dir / 'world_market_sold.json', 'w', encoding='utf-8') as f:
+        json.dump(sold_series, f, indent=2)
+
     # Global statistics over time
     global_series = []
     for entry in all_data:

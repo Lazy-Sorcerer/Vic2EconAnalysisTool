@@ -186,19 +186,20 @@ def save_chart(name: str, tight: bool = True):
 COUNTRY_COLORS = {
     'ENG': '#C8102E',  # Red
     'FRA': '#0055A4',  # Blue
-    'PRU': '#000000',  # Black
-    'NGF': '#000000',  # Black (North German Federation)
-    'GER': '#000000',  # Black (Germany)
+    'PRU': '#1E1E1E',  # Dark Gray (Prussia)
+    'NGF': '#1E1E1E',  # Dark Gray (North German Federation)
+    'GER': '#1E1E1E',  # Dark Gray (Germany)
     'AUS': '#F0E68C',  # Khaki (Austria)
     'SGF': '#F0E68C',  # Khaki (South German Federation)
     'KUK': '#F0E68C',  # Khaki (Austria-Hungary)
     'RUS': '#009B3A',  # Green
     'USA': '#3C3B6E',  # Navy
-    'JAP': '#BC002D',  # Red
+    'JAP': '#BC002D',  # Crimson
     'ITA': '#009246',  # Green
-    'SPA': '#F1BF00',  # Yellow
+    'SPA': '#F1BF00',  # Yellow/Gold
     'TUR': '#E30A17',  # Red
     'CHI': '#FFDE00',  # Yellow
+    'BRA': '#009739',  # Brazil Green
 }
 
 POP_TYPE_COLORS = {

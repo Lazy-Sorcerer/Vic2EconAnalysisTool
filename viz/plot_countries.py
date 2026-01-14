@@ -23,7 +23,7 @@ from utils import (
 
 # Major powers for comparison
 # Use group names (GER, KUK) which will automatically merge PRU→NGF→GER and AUS→SGF→KUK
-GREAT_POWERS = ['ENG', 'FRA', 'GER', 'KUK', 'RUS', 'USA']
+GREAT_POWERS = ['ENG', 'FRA', 'GER', 'KUK', 'RUS', 'USA', 'SPA', 'BRA', 'TUR', 'CHI', 'JAP']
 EUROPEAN_POWERS = ['ENG', 'FRA', 'GER', 'KUK', 'RUS', 'SPA', 'ITA', 'TUR']
 
 
