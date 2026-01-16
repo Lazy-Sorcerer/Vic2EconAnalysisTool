@@ -19,7 +19,32 @@ cd viz
 ..\venv\Scripts\python.exe plot_all.py --all
 ```
 
-Charts are saved to the `charts/` directory.
+Charts are saved to the `charts/` directory in organized subfolders.
+
+## Output Structure
+
+```
+charts/
+├── global/           # World-level statistics
+│   ├── total_population.png
+│   ├── total_wealth.png
+│   └── ...
+├── market/           # Commodity market data
+│   ├── prices_raw.png
+│   ├── supply_industrial.png
+│   └── ...
+├── comparisons/      # Cross-country comparison charts
+│   ├── comparison_treasury.png
+│   ├── comparison_gdp_proxy.png
+│   └── ...
+└── countries/        # Per-country statistics
+    ├── ENG/
+    │   ├── treasury.png
+    │   ├── population_total.png
+    │   └── ...
+    ├── FRA/
+    └── ...
+```
 
 ## Command Line Options
 
@@ -32,8 +57,9 @@ python plot_all.py [OPTIONS]
 | `--all` | Generate all charts (default if no options) |
 | `--global` | Generate global statistics charts |
 | `--market` | Generate world market charts |
-| `--countries` | Generate country comparison charts |
-| `--country TAG` | Generate profile for specific country (e.g., `--country ENG`) |
+| `--countries` | Generate individual country charts for ALL countries |
+| `--comparisons` | Generate comparison charts only |
+| `--country TAG` | Generate charts for specific country (e.g., `--country ENG`) |
 
 ### Examples
 
@@ -44,74 +70,130 @@ python plot_all.py --global
 # Generate only market charts
 python plot_all.py --market
 
-# Generate profile for France
-python plot_all.py --country FRA
+# Generate charts for England only
+python plot_all.py --country ENG
 
-# Generate market and country charts
+# Generate market and all country charts
 python plot_all.py --market --countries
+
+# Generate just comparison charts (no individual country charts)
+python plot_all.py --comparisons
 ```
 
 ## Generated Charts
 
-### Global Statistics (`--global`)
+### Global Statistics (`charts/global/`)
 
 | Chart | Description |
 |-------|-------------|
-| `global_population.png` | World population over time |
-| `global_wealth.png` | Total world wealth (cash + bank savings) |
-| `global_needs_satisfaction.png` | Average life/everyday/luxury needs |
-| `global_social_indicators.png` | Literacy, consciousness, militancy |
-| `global_population_by_type.png` | Population stacked by POP type |
-| `global_population_composition.png` | Population percentages by POP type |
-| `global_pop_vs_treasury.png` | POP wealth vs government treasuries comparison |
-| `global_pop_treasury_ratio.png` | Ratio of POP wealth to treasuries over time |
-| `global_wealth_composition.png` | Stacked area: POP cash, savings, and treasuries |
+| `total_population.png` | World population over time |
+| `population_by_type.png` | Population stacked by POP type |
+| `population_composition.png` | Population percentages by POP type |
+| `pop_[type].png` | Individual POP type population (aristocrats, farmers, etc.) |
+| `total_pop_money.png` | World POP cash holdings |
+| `total_pop_bank_savings.png` | World POP bank savings |
+| `total_wealth.png` | Total wealth (cash + savings stacked) |
+| `avg_life_needs.png` | Average life needs satisfaction |
+| `avg_everyday_needs.png` | Average everyday needs satisfaction |
+| `avg_luxury_needs.png` | Average luxury needs satisfaction |
+| `all_needs.png` | All three needs on one chart |
+| `avg_literacy.png` | World average literacy rate |
+| `avg_consciousness.png` | World average political consciousness |
+| `avg_militancy.png` | World average militancy |
+| `all_social.png` | All social indicators (normalized) |
 
-### World Market (`--market`)
+### World Market (`charts/market/`)
 
-#### Price Charts
+#### Category Charts
+
+For each category (raw, agricultural, industrial, consumer, military):
+
+| Chart Pattern | Description |
+|---------------|-------------|
+| `prices_[category].png` | Prices for category commodities |
+| `supply_[category].png` | Supply for category commodities |
+| `sold_[category].png` | Sold quantities for category commodities |
+| `balance_[category].png` | Supply/demand balance (surplus %) |
+| `price_index_[category].png` | Price index (base year = 100) |
+
+#### Individual Commodity Charts
+
+For each commodity (~47 total):
+
+| Chart Pattern | Description |
+|---------------|-------------|
+| `price_[commodity].png` | Price over time with trend line |
+| `supply_[commodity].png` | Supply over time |
+| `sold_[commodity].png` | Sold quantity over time |
+| `full_[commodity].png` | 4-panel analysis (price, supply, sold, comparison) |
+
+#### Summary Charts
 
 | Chart | Description |
 |-------|-------------|
-| `market_raw_resources.png` | Raw resource prices (coal, iron, grain, etc.) |
-| `market_industrial.png` | Industrial goods prices (steel, cement, etc.) |
-| `market_consumer.png` | Consumer goods prices (clothes, furniture, etc.) |
-| `market_military.png` | Military goods prices (ammunition, artillery, etc.) |
-| `market_luxury.png` | Luxury resource prices (silk, tea, coffee, etc.) |
-| `market_price_indices.png` | Composite price indices by category |
-| `market_volatility.png` | Price volatility (12-month rolling) |
-| `market_[commodity].png` | Individual commodity price charts (coal, iron, steel, grain, cotton) |
+| `category_comparison.png` | Composite price index for all categories |
 
-#### Supply & Demand Charts
+### Country Comparisons (`charts/comparisons/`)
+
+Compares major powers across all statistics:
 
 | Chart | Description |
 |-------|-------------|
-| `market_supply_raw.png` | Raw resource supply over time |
-| `market_supply_industrial.png` | Industrial goods supply over time |
-| `market_demand_raw.png` | Raw resource demand (units sold) over time |
-| `market_demand_industrial.png` | Industrial goods demand (units sold) over time |
-| `market_balance_raw.png` | Raw resource supply/demand balance (surplus %) |
-| `market_balance_industrial.png` | Industrial goods supply/demand balance (surplus %) |
-| `market_[commodity]_full.png` | Full market analysis (price, supply, demand, comparison) for key commodities |
+| `comparison_treasury.png` | Treasury comparison |
+| `comparison_prestige.png` | Prestige comparison |
+| `comparison_infamy.png` | Infamy comparison |
+| `comparison_total_tax_income.png` | Tax income comparison |
+| `comparison_total_factory_count.png` | Factory count comparison |
+| `comparison_total_factory_levels.png` | Factory levels comparison |
+| `comparison_total_factory_income.png` | Factory income comparison |
+| `comparison_total_factory_employment.png` | Factory employment comparison |
+| `comparison_total_rgo_income.png` | RGO income comparison |
+| `comparison_total_rgo_employment.png` | RGO employment comparison |
+| `comparison_population_total.png` | Population comparison |
+| `comparison_pop_money.png` | POP cash comparison |
+| `comparison_pop_bank_savings.png` | POP savings comparison |
+| `comparison_avg_life_needs.png` | Life needs comparison |
+| `comparison_avg_everyday_needs.png` | Everyday needs comparison |
+| `comparison_avg_luxury_needs.png` | Luxury needs comparison |
+| `comparison_avg_literacy.png` | Literacy comparison |
+| `comparison_avg_consciousness.png` | Consciousness comparison |
+| `comparison_avg_militancy.png` | Militancy comparison |
+| `comparison_gdp_proxy.png` | GDP proxy (factory + RGO income) |
+| `comparison_gdp_per_capita.png` | GDP per capita |
+| `comparison_industrialization.png` | Industrialization index |
+| `comparison_pop_wealth.png` | Total POP wealth comparison |
 
-### Country Comparisons (`--countries`)
+### Individual Country Charts (`charts/countries/[TAG]/`)
+
+For each country with data, generates:
 
 | Chart | Description |
 |-------|-------------|
-| `country_treasury.png` | National treasury comparison |
-| `country_prestige.png` | Prestige score comparison |
-| `country_factories.png` | Factory count comparison |
-| `country_factory_income.png` | Factory income comparison |
-| `country_population.png` | Population comparison |
-| `country_literacy.png` | Literacy rate comparison |
-| `country_industrialization_index.png` | Factories per million population |
-| `country_gdp_proxy.png` | GDP proxy (factory + RGO income) |
-| `country_gdp_per_capita.png` | GDP per capita proxy |
-| `country_tax_income.png` | Total tax income comparison |
-| `country_pop_wealth.png` | POP wealth comparison across countries |
-| `country_pop_vs_treasury.png` | POP wealth vs treasury panels for major powers |
-| `country_wealth_ratio.png` | POP wealth to treasury ratio comparison |
-| `country_profile_[TAG].png` | Multi-panel country profiles |
+| `treasury.png` | National treasury |
+| `bank_reserves.png` | Bank reserves |
+| `prestige.png` | Prestige score |
+| `infamy.png` | Infamy (badboy) |
+| `total_tax_income.png` | Total tax revenue |
+| `total_factory_count.png` | Number of factories |
+| `total_factory_levels.png` | Sum of factory levels |
+| `total_factory_income.png` | Factory revenue |
+| `total_factory_employment.png` | Factory workers |
+| `total_rgo_income.png` | RGO revenue |
+| `total_rgo_employment.png` | RGO workers |
+| `population_total.png` | Total population |
+| `pop_money.png` | POP cash holdings |
+| `pop_bank_savings.png` | POP bank savings |
+| `avg_life_needs.png` | Life needs satisfaction |
+| `avg_everyday_needs.png` | Everyday needs satisfaction |
+| `avg_luxury_needs.png` | Luxury needs satisfaction |
+| `avg_literacy.png` | Literacy rate |
+| `avg_consciousness.png` | Political consciousness |
+| `avg_militancy.png` | Militancy |
+| `gdp_proxy.png` | GDP proxy (factory + RGO income) |
+| `total_pop_wealth.png` | Stacked cash + savings |
+| `all_needs.png` | All needs on one chart |
+| `industrialization_index.png` | Factories per million pop |
+| `overview.png` | 6-panel economic overview |
 
 ## Countries Compared
 
@@ -124,7 +206,6 @@ By default, the following Great Powers are compared:
 - **RUS** - Russia
 - **USA** - United States
 - **SPA** - Spain
-- **BRA** - Brazil
 - **TUR** - Ottoman Empire
 - **CHI** - Qing China
 - **JAP** - Japan
@@ -144,7 +225,7 @@ cd viz
 # Market data only
 ..\venv\Scripts\python.exe plot_market.py
 
-# Country comparisons only
+# Country charts only
 ..\venv\Scripts\python.exe plot_countries.py
 ```
 
@@ -155,7 +236,7 @@ cd viz
 Edit `viz/plot_countries.py` and modify the `GREAT_POWERS` list:
 
 ```python
-GREAT_POWERS = ['ENG', 'FRA', 'PRU', 'AUS', 'RUS', 'USA', 'JAP', 'ITA']
+GREAT_POWERS = ['ENG', 'FRA', 'GER', 'KUK', 'RUS', 'USA', 'JAP', 'ITA']
 ```
 
 ### Custom Country Colors
@@ -176,8 +257,11 @@ COUNTRY_COLORS = {
 Edit `viz/plot_market.py` and modify the commodity lists:
 
 ```python
-RAW_RESOURCES = ['coal', 'iron', 'timber', 'cotton', 'wool', 'grain', 'cattle']
+RAW_RESOURCES = ['coal', 'iron', 'sulphur', 'timber', ...]
+AGRICULTURAL = ['grain', 'cattle', 'cotton', 'wool', ...]
 INDUSTRIAL_GOODS = ['steel', 'cement', 'machine_parts', ...]
+CONSUMER_GOODS = ['regular_clothes', 'luxury_clothes', ...]
+MILITARY_GOODS = ['ammunition', 'small_arms', 'artillery', ...]
 ```
 
 ## Creating Custom Charts
@@ -192,6 +276,7 @@ import matplotlib.pyplot as plt
 from utils import (
     load_json,
     load_country,
+    load_country_group,
     parse_date,
     setup_style,
     format_date_axis,
@@ -215,7 +300,8 @@ ax.set_title('My Custom Chart')
 format_date_axis(ax, dates)
 format_large_numbers(ax)
 
-save_chart('my_custom_chart')
+# Save to custom subfolder
+save_chart('my_custom_chart', subdir='custom')
 ```
 
 ## Output Format
@@ -223,7 +309,8 @@ save_chart('my_custom_chart')
 - **Format:** PNG
 - **Resolution:** 150 DPI
 - **Default size:** 12x6 inches (1800x900 pixels)
-- **Multi-panel:** 18x10 inches for country profiles
+- **Multi-panel:** 18x10 inches for overview panels
+- **Market category charts:** 14x7 inches
 
 ## Troubleshooting
 
@@ -240,9 +327,22 @@ The scripts use the 'ggplot' style which should be consistent across platforms.
 
 ### Memory issues with large datasets
 
-The visualization scripts load data as needed. If memory is an issue, generate chart categories separately:
+Generate chart categories separately to reduce memory usage:
 ```bash
 python plot_all.py --global
 python plot_all.py --market
+python plot_all.py --comparisons
 python plot_all.py --countries
+```
+
+### Too many charts generated
+
+For a quick overview, generate only comparisons:
+```bash
+python plot_all.py --global --comparisons
+```
+
+Or generate charts for specific countries:
+```bash
+python plot_all.py --country ENG --country FRA
 ```

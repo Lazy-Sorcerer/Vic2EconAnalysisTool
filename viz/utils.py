@@ -17,9 +17,20 @@ OUTPUT_DIR = ROOT_DIR / 'output'
 CHARTS_DIR = ROOT_DIR / 'charts'
 
 
-def ensure_charts_dir():
-    """Create charts directory if it doesn't exist."""
-    CHARTS_DIR.mkdir(exist_ok=True)
+def ensure_charts_dir(subdir: str = None) -> Path:
+    """Create charts directory (and optional subdirectory) if it doesn't exist.
+
+    Args:
+        subdir: Optional subdirectory path (e.g., 'global', 'market', 'countries/ENG')
+
+    Returns:
+        Path to the charts directory (or subdirectory if specified)
+    """
+    target = CHARTS_DIR
+    if subdir:
+        target = CHARTS_DIR / subdir
+    target.mkdir(parents=True, exist_ok=True)
+    return target
 
 
 def load_json(filename: str) -> Any:
@@ -173,12 +184,18 @@ def format_large_numbers(ax, axis='y'):
         ax.xaxis.set_major_formatter(FuncFormatter(formatter))
 
 
-def save_chart(name: str, tight: bool = True):
-    """Save current figure to charts directory."""
-    ensure_charts_dir()
+def save_chart(name: str, tight: bool = True, subdir: str = None):
+    """Save current figure to charts directory.
+
+    Args:
+        name: Chart filename (without extension)
+        tight: Whether to apply tight_layout
+        subdir: Optional subdirectory (e.g., 'global', 'market', 'countries/ENG')
+    """
+    target_dir = ensure_charts_dir(subdir)
     if tight:
         plt.tight_layout()
-    plt.savefig(CHARTS_DIR / f'{name}.png', dpi=150, bbox_inches='tight')
+    plt.savefig(target_dir / f'{name}.png', dpi=150, bbox_inches='tight')
     plt.close()
 
 

@@ -1,5 +1,6 @@
 """
-Visualizations for world market data.
+Visualizations for world market data - prices, supply, and sold quantities.
+Generates individual charts for each commodity and category summaries.
 """
 
 import matplotlib.pyplot as plt
@@ -10,23 +11,66 @@ from utils import (
     parse_date,
     setup_style,
     format_date_axis,
+    format_large_numbers,
     save_chart,
     get_commodity_color,
 )
 
 
-# Commodity categories
-RAW_RESOURCES = ['coal', 'iron', 'timber', 'cotton', 'wool', 'grain', 'cattle']
-INDUSTRIAL_GOODS = ['steel', 'cement', 'machine_parts', 'fabric', 'lumber', 'glass', 'fertilizer']
-CONSUMER_GOODS = ['regular_clothes', 'luxury_clothes', 'furniture', 'luxury_furniture', 'liquor', 'wine']
-MILITARY_GOODS = ['ammunition', 'small_arms', 'artillery', 'canned_food', 'clipper_convoy', 'steamer_convoy']
-LUXURY_RESOURCES = ['silk', 'dye', 'tea', 'coffee', 'opium', 'tobacco', 'tropical_wood']
+# =============================================================================
+# Commodity Categories
+# =============================================================================
+
+RAW_RESOURCES = [
+    'coal', 'iron', 'sulphur', 'timber', 'tropical_wood',
+    'precious_metal', 'oil', 'rubber'
+]
+
+AGRICULTURAL = [
+    'grain', 'cattle', 'fish', 'fruit', 'cotton', 'wool', 'silk', 'dye',
+    'tobacco', 'tea', 'coffee', 'opium'
+]
+
+INDUSTRIAL_GOODS = [
+    'steel', 'cement', 'glass', 'fertilizer', 'explosives',
+    'machine_parts', 'electric_gear', 'fuel', 'fabric', 'lumber', 'paper'
+]
+
+CONSUMER_GOODS = [
+    'regular_clothes', 'luxury_clothes', 'furniture', 'luxury_furniture',
+    'wine', 'liquor'
+]
+
+MILITARY_GOODS = [
+    'ammunition', 'small_arms', 'artillery', 'canned_food', 'barrels',
+    'clipper_convoy', 'steamer_convoy', 'aeroplanes', 'automobiles',
+    'telephones', 'radio'
+]
+
+ALL_CATEGORIES = {
+    'raw': ('Raw Resources', RAW_RESOURCES),
+    'agricultural': ('Agricultural Goods', AGRICULTURAL),
+    'industrial': ('Industrial Goods', INDUSTRIAL_GOODS),
+    'consumer': ('Consumer Goods', CONSUMER_GOODS),
+    'military': ('Military Goods', MILITARY_GOODS),
+}
+
+SUBDIR = 'market'
 
 
-def plot_commodity_prices(commodities: list[str], title: str, filename: str):
-    """Plot prices for a list of commodities."""
+# =============================================================================
+# Helper Functions
+# =============================================================================
+
+def get_all_commodities(data: list[dict]) -> list[str]:
+    """Get all commodity names from market data."""
+    return [k for k in data[0].keys() if k != 'date']
+
+
+def plot_commodity_group(data: list[dict], commodities: list[str],
+                         title: str, ylabel: str, filename: str):
+    """Plot multiple commodities on one chart."""
     setup_style()
-    data = load_json('world_market_prices.json')
 
     dates = [parse_date(d['date']) for d in data]
 
@@ -36,309 +80,207 @@ def plot_commodity_prices(commodities: list[str], title: str, filename: str):
         if commodity in data[0]:
             values = [d.get(commodity, 0) for d in data]
             color = get_commodity_color(commodity)
-            ax.plot(dates, values, label=commodity.replace('_', ' ').title(),
-                   linewidth=1.5, color=color if color != '#888888' else None)
+            label = commodity.replace('_', ' ').title()
+            ax.plot(dates, values, label=label, linewidth=1.5,
+                    color=color if color != '#888888' else None)
 
     ax.set_title(title)
     ax.set_xlabel('Year')
-    ax.set_ylabel('Price (£)')
+    ax.set_ylabel(ylabel)
 
     format_date_axis(ax, dates)
+    format_large_numbers(ax)
     ax.legend(loc='best', ncol=2)
 
-    save_chart(filename)
-    print(f'Saved: {filename}.png')
+    save_chart(filename, subdir=SUBDIR)
+    print(f'Saved: {SUBDIR}/{filename}.png')
 
 
-def plot_raw_resource_prices():
-    """Plot raw resource prices."""
-    plot_commodity_prices(RAW_RESOURCES, 'Raw Resource Prices', 'market_raw_resources')
-
-
-def plot_industrial_prices():
-    """Plot industrial goods prices."""
-    plot_commodity_prices(INDUSTRIAL_GOODS, 'Industrial Goods Prices', 'market_industrial')
-
-
-def plot_consumer_prices():
-    """Plot consumer goods prices."""
-    plot_commodity_prices(CONSUMER_GOODS, 'Consumer Goods Prices', 'market_consumer')
-
-
-def plot_military_prices():
-    """Plot military goods prices."""
-    plot_commodity_prices(MILITARY_GOODS, 'Military Goods Prices', 'market_military')
-
-
-def plot_luxury_prices():
-    """Plot luxury resource prices."""
-    plot_commodity_prices(LUXURY_RESOURCES, 'Luxury Resource Prices', 'market_luxury')
-
-
-def plot_price_indices():
-    """Plot composite price indices for different categories."""
+def plot_single_commodity(data: list[dict], commodity: str,
+                          title: str, ylabel: str, filename: str,
+                          color: str = '#2E86AB'):
+    """Plot a single commodity over time."""
     setup_style()
-    data = load_json('world_market_prices.json')
-
-    dates = [parse_date(d['date']) for d in data]
-
-    # Calculate average price index for each category (normalized to first date)
-    def calc_index(commodities):
-        index = []
-        base_prices = {}
-        for commodity in commodities:
-            if commodity in data[0]:
-                base_prices[commodity] = data[0][commodity]
-
-        for d in data:
-            total = 0
-            count = 0
-            for commodity in commodities:
-                if commodity in d and commodity in base_prices and base_prices[commodity] > 0:
-                    total += d[commodity] / base_prices[commodity]
-                    count += 1
-            index.append((total / count * 100) if count > 0 else 100)
-        return index
-
-    raw_index = calc_index(RAW_RESOURCES)
-    industrial_index = calc_index(INDUSTRIAL_GOODS)
-    consumer_index = calc_index(CONSUMER_GOODS)
-    military_index = calc_index(MILITARY_GOODS)
-
-    fig, ax = plt.subplots(figsize=(14, 7))
-
-    ax.plot(dates, raw_index, label='Raw Resources', linewidth=2, color='#2E86AB')
-    ax.plot(dates, industrial_index, label='Industrial Goods', linewidth=2, color='#A23B72')
-    ax.plot(dates, consumer_index, label='Consumer Goods', linewidth=2, color='#F18F01')
-    ax.plot(dates, military_index, label='Military Goods', linewidth=2, color='#C73E1D')
-
-    ax.axhline(y=100, color='gray', linestyle='--', alpha=0.5, label='Baseline (100)')
-
-    ax.set_title('Price Indices by Category (Base Year = 100)')
-    ax.set_xlabel('Year')
-    ax.set_ylabel('Price Index')
-
-    format_date_axis(ax, dates)
-    ax.legend(loc='best')
-
-    save_chart('market_price_indices')
-    print('Saved: market_price_indices.png')
-
-
-def plot_price_volatility():
-    """Plot rolling volatility of key commodities."""
-    setup_style()
-    data = load_json('world_market_prices.json')
-
-    dates = [parse_date(d['date']) for d in data]
-
-    # Key commodities to track
-    commodities = ['coal', 'iron', 'grain', 'cotton', 'steel']
-
-    # Calculate rolling standard deviation (12-month window)
-    window = 12
-
-    fig, ax = plt.subplots(figsize=(14, 7))
-
-    for commodity in commodities:
-        if commodity not in data[0]:
-            continue
-
-        prices = [d.get(commodity, 0) for d in data]
-        volatility = []
-
-        for i in range(len(prices)):
-            if i < window:
-                volatility.append(np.nan)
-            else:
-                window_prices = prices[i-window:i]
-                mean = np.mean(window_prices)
-                if mean > 0:
-                    std = np.std(window_prices)
-                    volatility.append(std / mean * 100)  # Coefficient of variation
-                else:
-                    volatility.append(np.nan)
-
-        color = get_commodity_color(commodity)
-        ax.plot(dates, volatility, label=commodity.title(),
-               linewidth=1.5, color=color if color != '#888888' else None)
-
-    ax.set_title('Price Volatility (12-Month Rolling CV%)')
-    ax.set_xlabel('Year')
-    ax.set_ylabel('Coefficient of Variation (%)')
-
-    format_date_axis(ax, dates)
-    ax.legend(loc='best')
-
-    save_chart('market_volatility')
-    print('Saved: market_volatility.png')
-
-
-def plot_single_commodity(commodity: str):
-    """Plot detailed view of a single commodity."""
-    setup_style()
-    data = load_json('world_market_prices.json')
 
     if commodity not in data[0]:
-        print(f'Commodity {commodity} not found in data')
+        print(f'Commodity {commodity} not found')
         return
 
     dates = [parse_date(d['date']) for d in data]
-    prices = [d.get(commodity, 0) for d in data]
+    values = [d.get(commodity, 0) for d in data]
 
     fig, ax = plt.subplots()
 
-    ax.plot(dates, prices, color='#2E86AB', linewidth=2)
-    ax.fill_between(dates, prices, alpha=0.3, color='#2E86AB')
+    ax.plot(dates, values, color=color, linewidth=2)
+    ax.fill_between(dates, values, alpha=0.3, color=color)
 
     # Add trend line
     x_numeric = np.arange(len(dates))
-    z = np.polyfit(x_numeric, prices, 1)
+    z = np.polyfit(x_numeric, values, 1)
     p = np.poly1d(z)
     ax.plot(dates, p(x_numeric), '--', color='#E63946', alpha=0.8, label='Trend')
 
-    ax.set_title(f'{commodity.replace("_", " ").title()} Price Over Time')
+    ax.set_title(title)
     ax.set_xlabel('Year')
-    ax.set_ylabel('Price (£)')
+    ax.set_ylabel(ylabel)
 
     format_date_axis(ax, dates)
+    format_large_numbers(ax)
     ax.legend()
 
-    save_chart(f'market_{commodity}')
-    print(f'Saved: market_{commodity}.png')
+    save_chart(filename, subdir=SUBDIR)
+    print(f'Saved: {SUBDIR}/{filename}.png')
 
 
-def plot_commodity_supply(commodities: list[str], title: str, filename: str):
-    """Plot supply for a list of commodities."""
-    setup_style()
+# =============================================================================
+# Price Charts
+# =============================================================================
+
+def plot_prices_by_category(category_key: str):
+    """Plot prices for a commodity category."""
+    data = load_json('world_market_prices.json')
+    cat_name, commodities = ALL_CATEGORIES[category_key]
+    plot_commodity_group(
+        data, commodities,
+        title=f'{cat_name} Prices',
+        ylabel='Price (£)',
+        filename=f'market_prices_{category_key}'
+    )
+
+
+def plot_all_category_prices():
+    """Plot prices for all commodity categories."""
+    for category_key in ALL_CATEGORIES:
+        plot_prices_by_category(category_key)
+
+
+def plot_single_price(commodity: str):
+    """Plot price for a single commodity."""
+    data = load_json('world_market_prices.json')
+    color = get_commodity_color(commodity)
+    if color == '#888888':
+        color = '#2E86AB'
+    plot_single_commodity(
+        data, commodity,
+        title=f'{commodity.replace("_", " ").title()} Price',
+        ylabel='Price (£)',
+        filename=f'market_price_{commodity}',
+        color=color
+    )
+
+
+def plot_all_individual_prices():
+    """Plot individual price charts for all commodities."""
+    data = load_json('world_market_prices.json')
+    commodities = get_all_commodities(data)
+    for commodity in commodities:
+        plot_single_price(commodity)
+
+
+# =============================================================================
+# Supply Charts
+# =============================================================================
+
+def plot_supply_by_category(category_key: str):
+    """Plot supply for a commodity category."""
     data = load_json('world_market_supply.json')
+    cat_name, commodities = ALL_CATEGORIES[category_key]
+    plot_commodity_group(
+        data, commodities,
+        title=f'{cat_name} Supply',
+        ylabel='Supply (units)',
+        filename=f'market_supply_{category_key}'
+    )
 
-    dates = [parse_date(d['date']) for d in data]
 
-    fig, ax = plt.subplots(figsize=(14, 7))
+def plot_all_category_supply():
+    """Plot supply for all commodity categories."""
+    for category_key in ALL_CATEGORIES:
+        plot_supply_by_category(category_key)
 
+
+def plot_single_supply(commodity: str):
+    """Plot supply for a single commodity."""
+    data = load_json('world_market_supply.json')
+    color = get_commodity_color(commodity)
+    if color == '#888888':
+        color = '#2A9D8F'
+    plot_single_commodity(
+        data, commodity,
+        title=f'{commodity.replace("_", " ").title()} Supply',
+        ylabel='Supply (units)',
+        filename=f'market_supply_{commodity}',
+        color=color
+    )
+
+
+def plot_all_individual_supply():
+    """Plot individual supply charts for all commodities."""
+    data = load_json('world_market_supply.json')
+    commodities = get_all_commodities(data)
     for commodity in commodities:
-        if commodity in data[0]:
-            values = [d.get(commodity, 0) for d in data]
-            color = get_commodity_color(commodity)
-            ax.plot(dates, values, label=commodity.replace('_', ' ').title(),
-                   linewidth=1.5, color=color if color != '#888888' else None)
-
-    ax.set_title(title)
-    ax.set_xlabel('Year')
-    ax.set_ylabel('Supply (units)')
-
-    format_date_axis(ax, dates)
-    ax.legend(loc='best', ncol=2)
-
-    save_chart(filename)
-    print(f'Saved: {filename}.png')
+        plot_single_supply(commodity)
 
 
-def plot_commodity_demand(commodities: list[str], title: str, filename: str):
-    """Plot demand (actual sold) for a list of commodities."""
-    setup_style()
+# =============================================================================
+# Sold (Demand) Charts
+# =============================================================================
+
+def plot_sold_by_category(category_key: str):
+    """Plot sold quantities for a commodity category."""
     data = load_json('world_market_sold.json')
+    cat_name, commodities = ALL_CATEGORIES[category_key]
+    plot_commodity_group(
+        data, commodities,
+        title=f'{cat_name} Sold',
+        ylabel='Sold (units)',
+        filename=f'market_sold_{category_key}'
+    )
 
-    dates = [parse_date(d['date']) for d in data]
 
-    fig, ax = plt.subplots(figsize=(14, 7))
+def plot_all_category_sold():
+    """Plot sold quantities for all commodity categories."""
+    for category_key in ALL_CATEGORIES:
+        plot_sold_by_category(category_key)
 
+
+def plot_single_sold(commodity: str):
+    """Plot sold quantities for a single commodity."""
+    data = load_json('world_market_sold.json')
+    color = get_commodity_color(commodity)
+    if color == '#888888':
+        color = '#E76F51'
+    plot_single_commodity(
+        data, commodity,
+        title=f'{commodity.replace("_", " ").title()} Sold',
+        ylabel='Sold (units)',
+        filename=f'market_sold_{commodity}',
+        color=color
+    )
+
+
+def plot_all_individual_sold():
+    """Plot individual sold charts for all commodities."""
+    data = load_json('world_market_sold.json')
+    commodities = get_all_commodities(data)
     for commodity in commodities:
-        if commodity in data[0]:
-            values = [d.get(commodity, 0) for d in data]
-            color = get_commodity_color(commodity)
-            ax.plot(dates, values, label=commodity.replace('_', ' ').title(),
-                   linewidth=1.5, color=color if color != '#888888' else None)
-
-    ax.set_title(title)
-    ax.set_xlabel('Year')
-    ax.set_ylabel('Demand (units sold)')
-
-    format_date_axis(ax, dates)
-    ax.legend(loc='best', ncol=2)
-
-    save_chart(filename)
-    print(f'Saved: {filename}.png')
+        plot_single_sold(commodity)
 
 
-def plot_supply_demand_balance(commodities: list[str], title: str, filename: str):
-    """Plot supply/demand balance (supply - actual_sold) for commodities."""
+# =============================================================================
+# Combined Analysis Charts
+# =============================================================================
+
+def plot_commodity_full(commodity: str):
+    """Plot complete market analysis for a single commodity (price, supply, sold)."""
     setup_style()
-    supply_data = load_json('world_market_supply.json')
-    sold_data = load_json('world_market_sold.json')
 
-    dates = [parse_date(d['date']) for d in supply_data]
-
-    fig, ax = plt.subplots(figsize=(14, 7))
-
-    for commodity in commodities:
-        if commodity in supply_data[0] and commodity in sold_data[0]:
-            balance = []
-            for i in range(len(supply_data)):
-                supply = supply_data[i].get(commodity, 0)
-                sold = sold_data[i].get(commodity, 0)
-                # Balance as percentage: (supply - sold) / supply * 100
-                if supply > 0:
-                    balance.append((supply - sold) / supply * 100)
-                else:
-                    balance.append(0)
-
-            color = get_commodity_color(commodity)
-            ax.plot(dates, balance, label=commodity.replace('_', ' ').title(),
-                   linewidth=1.5, color=color if color != '#888888' else None)
-
-    ax.axhline(y=0, color='black', linestyle='-', alpha=0.3)
-    ax.set_title(title)
-    ax.set_xlabel('Year')
-    ax.set_ylabel('Supply Surplus (%)')
-
-    format_date_axis(ax, dates)
-    ax.legend(loc='best', ncol=2)
-
-    save_chart(filename)
-    print(f'Saved: {filename}.png')
-
-
-def plot_raw_resource_supply():
-    """Plot raw resource supply."""
-    plot_commodity_supply(RAW_RESOURCES, 'Raw Resource Supply', 'market_supply_raw')
-
-
-def plot_industrial_supply():
-    """Plot industrial goods supply."""
-    plot_commodity_supply(INDUSTRIAL_GOODS, 'Industrial Goods Supply', 'market_supply_industrial')
-
-
-def plot_raw_resource_demand():
-    """Plot raw resource demand."""
-    plot_commodity_demand(RAW_RESOURCES, 'Raw Resource Demand', 'market_demand_raw')
-
-
-def plot_industrial_demand():
-    """Plot industrial goods demand."""
-    plot_commodity_demand(INDUSTRIAL_GOODS, 'Industrial Goods Demand', 'market_demand_industrial')
-
-
-def plot_supply_demand_raw():
-    """Plot supply/demand balance for raw resources."""
-    plot_supply_demand_balance(RAW_RESOURCES, 'Raw Resource Supply/Demand Balance', 'market_balance_raw')
-
-
-def plot_supply_demand_industrial():
-    """Plot supply/demand balance for industrial goods."""
-    plot_supply_demand_balance(INDUSTRIAL_GOODS, 'Industrial Goods Supply/Demand Balance', 'market_balance_industrial')
-
-
-def plot_single_commodity_full(commodity: str):
-    """Plot detailed view of a single commodity with price, supply, and demand."""
-    setup_style()
     price_data = load_json('world_market_prices.json')
     supply_data = load_json('world_market_supply.json')
     sold_data = load_json('world_market_sold.json')
 
     if commodity not in price_data[0]:
-        print(f'Commodity {commodity} not found in data')
+        print(f'Commodity {commodity} not found')
         return
 
     dates = [parse_date(d['date']) for d in price_data]
@@ -347,7 +289,8 @@ def plot_single_commodity_full(commodity: str):
     sold = [d.get(commodity, 0) for d in sold_data]
 
     fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-    fig.suptitle(f'{commodity.replace("_", " ").title()} Market Analysis', fontsize=14)
+    title = commodity.replace('_', ' ').title()
+    fig.suptitle(f'{title} Market Analysis', fontsize=14)
 
     # Price plot
     ax = axes[0, 0]
@@ -364,62 +307,216 @@ def plot_single_commodity_full(commodity: str):
     ax.set_title('Supply')
     ax.set_ylabel('Units')
     format_date_axis(ax, dates)
+    format_large_numbers(ax)
 
-    # Demand (sold) plot
+    # Sold plot
     ax = axes[1, 0]
     ax.plot(dates, sold, color='#E76F51', linewidth=2)
     ax.fill_between(dates, sold, alpha=0.3, color='#E76F51')
-    ax.set_title('Demand (Sold)')
+    ax.set_title('Sold (Demand)')
     ax.set_ylabel('Units')
     format_date_axis(ax, dates)
+    format_large_numbers(ax)
 
-    # Supply vs Demand comparison
+    # Supply vs Sold comparison
     ax = axes[1, 1]
     ax.plot(dates, supply, label='Supply', color='#2A9D8F', linewidth=2)
-    ax.plot(dates, sold, label='Demand', color='#E76F51', linewidth=2)
-    ax.set_title('Supply vs Demand')
+    ax.plot(dates, sold, label='Sold', color='#E76F51', linewidth=2)
+    ax.set_title('Supply vs Sold')
     ax.set_ylabel('Units')
     ax.legend()
     format_date_axis(ax, dates)
+    format_large_numbers(ax)
 
-    save_chart(f'market_{commodity}_full')
-    print(f'Saved: market_{commodity}_full.png')
+    save_chart(f'full_{commodity}', subdir=SUBDIR)
+    print(f'Saved: {SUBDIR}/full_{commodity}.png')
 
+
+def plot_all_commodity_full():
+    """Plot full market analysis for all commodities."""
+    data = load_json('world_market_prices.json')
+    commodities = get_all_commodities(data)
+    for commodity in commodities:
+        plot_commodity_full(commodity)
+
+
+def plot_supply_demand_balance(category_key: str):
+    """Plot supply/demand balance (surplus %) for a commodity category."""
+    setup_style()
+
+    supply_data = load_json('world_market_supply.json')
+    sold_data = load_json('world_market_sold.json')
+
+    cat_name, commodities = ALL_CATEGORIES[category_key]
+
+    dates = [parse_date(d['date']) for d in supply_data]
+
+    fig, ax = plt.subplots(figsize=(14, 7))
+
+    for commodity in commodities:
+        if commodity in supply_data[0] and commodity in sold_data[0]:
+            balance = []
+            for i in range(len(supply_data)):
+                supply = supply_data[i].get(commodity, 0)
+                sold = sold_data[i].get(commodity, 0)
+                if supply > 0:
+                    balance.append((supply - sold) / supply * 100)
+                else:
+                    balance.append(0)
+
+            color = get_commodity_color(commodity)
+            label = commodity.replace('_', ' ').title()
+            ax.plot(dates, balance, label=label, linewidth=1.5,
+                    color=color if color != '#888888' else None)
+
+    ax.axhline(y=0, color='black', linestyle='-', alpha=0.3)
+    ax.set_title(f'{cat_name} Supply/Demand Balance')
+    ax.set_xlabel('Year')
+    ax.set_ylabel('Surplus (%)')
+
+    format_date_axis(ax, dates)
+    ax.legend(loc='best', ncol=2)
+
+    save_chart(f'balance_{category_key}', subdir=SUBDIR)
+    print(f'Saved: {SUBDIR}/balance_{category_key}.png')
+
+
+def plot_all_supply_demand_balance():
+    """Plot supply/demand balance for all categories."""
+    for category_key in ALL_CATEGORIES:
+        plot_supply_demand_balance(category_key)
+
+
+def plot_price_index(category_key: str):
+    """Plot price index (base 100) for a commodity category."""
+    setup_style()
+
+    data = load_json('world_market_prices.json')
+    cat_name, commodities = ALL_CATEGORIES[category_key]
+
+    dates = [parse_date(d['date']) for d in data]
+
+    fig, ax = plt.subplots(figsize=(14, 7))
+
+    for commodity in commodities:
+        if commodity in data[0] and data[0][commodity] > 0:
+            base_price = data[0][commodity]
+            index = [(d.get(commodity, 0) / base_price * 100) for d in data]
+
+            color = get_commodity_color(commodity)
+            label = commodity.replace('_', ' ').title()
+            ax.plot(dates, index, label=label, linewidth=1.5,
+                    color=color if color != '#888888' else None)
+
+    ax.axhline(y=100, color='gray', linestyle='--', alpha=0.5, label='Baseline')
+    ax.set_title(f'{cat_name} Price Index (Base Year = 100)')
+    ax.set_xlabel('Year')
+    ax.set_ylabel('Price Index')
+
+    format_date_axis(ax, dates)
+    ax.legend(loc='best', ncol=2)
+
+    save_chart(f'price_index_{category_key}', subdir=SUBDIR)
+    print(f'Saved: {SUBDIR}/price_index_{category_key}.png')
+
+
+def plot_all_price_indices():
+    """Plot price indices for all categories."""
+    for category_key in ALL_CATEGORIES:
+        plot_price_index(category_key)
+
+
+def plot_category_price_comparison():
+    """Plot composite price index comparison across all categories."""
+    setup_style()
+
+    data = load_json('world_market_prices.json')
+    dates = [parse_date(d['date']) for d in data]
+
+    def calc_category_index(commodities):
+        """Calculate average price index for a category."""
+        base_prices = {}
+        for commodity in commodities:
+            if commodity in data[0] and data[0][commodity] > 0:
+                base_prices[commodity] = data[0][commodity]
+
+        index = []
+        for d in data:
+            total = 0
+            count = 0
+            for commodity in commodities:
+                if commodity in d and commodity in base_prices:
+                    total += d[commodity] / base_prices[commodity]
+                    count += 1
+            index.append((total / count * 100) if count > 0 else 100)
+        return index
+
+    fig, ax = plt.subplots(figsize=(14, 7))
+
+    colors = ['#2E86AB', '#E63946', '#2A9D8F', '#F18F01', '#9B2335']
+
+    for i, (cat_key, (cat_name, commodities)) in enumerate(ALL_CATEGORIES.items()):
+        index = calc_category_index(commodities)
+        ax.plot(dates, index, label=cat_name, linewidth=2, color=colors[i % len(colors)])
+
+    ax.axhline(y=100, color='gray', linestyle='--', alpha=0.5, label='Baseline')
+    ax.set_title('Category Price Index Comparison')
+    ax.set_xlabel('Year')
+    ax.set_ylabel('Price Index (Base Year = 100)')
+
+    format_date_axis(ax, dates)
+    ax.legend(loc='best')
+
+    save_chart('category_comparison', subdir=SUBDIR)
+    print(f'Saved: {SUBDIR}/category_comparison.png')
+
+
+# =============================================================================
+# Main Entry Point
+# =============================================================================
 
 def plot_all():
-    """Generate all market visualizations."""
+    """Generate all world market visualizations."""
     print("Generating world market charts...")
 
-    # Price charts
-    plot_raw_resource_prices()
-    plot_industrial_prices()
-    plot_consumer_prices()
-    plot_military_prices()
-    plot_luxury_prices()
-    plot_price_indices()
-    plot_price_volatility()
+    # Category-level price charts
+    print("  Category price charts...")
+    plot_all_category_prices()
 
-    # Supply charts
-    plot_raw_resource_supply()
-    plot_industrial_supply()
+    # Category-level supply charts
+    print("  Category supply charts...")
+    plot_all_category_supply()
 
-    # Demand charts
-    plot_raw_resource_demand()
-    plot_industrial_demand()
+    # Category-level sold charts
+    print("  Category sold charts...")
+    plot_all_category_sold()
 
-    # Supply/Demand balance charts
-    plot_supply_demand_raw()
-    plot_supply_demand_industrial()
+    # Supply/demand balance charts
+    print("  Supply/demand balance charts...")
+    plot_all_supply_demand_balance()
 
-    # Individual commodity charts for key goods (price only)
-    for commodity in ['coal', 'iron', 'steel', 'grain', 'cotton']:
-        plot_single_commodity(commodity)
+    # Price index charts
+    print("  Price index charts...")
+    plot_all_price_indices()
+    plot_category_price_comparison()
 
-    # Full market analysis charts for key goods (price + supply + demand)
-    for commodity in ['coal', 'iron', 'steel', 'grain', 'cotton']:
-        plot_single_commodity_full(commodity)
+    # Individual commodity charts (price only)
+    print("  Individual price charts...")
+    plot_all_individual_prices()
 
-    print("Done!")
+    # Individual supply charts
+    print("  Individual supply charts...")
+    plot_all_individual_supply()
+
+    # Individual sold charts
+    print("  Individual sold charts...")
+    plot_all_individual_sold()
+
+    # Full analysis charts (combined price/supply/sold)
+    print("  Full commodity analysis charts...")
+    plot_all_commodity_full()
+
+    print("Done with world market!")
 
 
 if __name__ == '__main__':
