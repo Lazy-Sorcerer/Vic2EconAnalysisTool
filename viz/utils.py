@@ -104,6 +104,31 @@ CHARTS_DIR = ROOT_DIR / 'charts'
 # DIRECTORY MANAGEMENT
 # =============================================================================
 
+def set_charts_base_dir(subfolder: str = None):
+    """
+    Set the base charts directory, optionally with a subfolder.
+
+    This allows redirecting all chart output to a subfolder, useful for
+    organizing charts from different game sessions (e.g., MP games).
+
+    Args:
+        subfolder: Optional subfolder name (e.g., 'MP_game_01')
+                   If None, resets to the default 'charts/' directory.
+
+    Examples:
+        >>> set_charts_base_dir('MP_game_01')
+        # All charts now go to charts/MP_game_01/...
+
+        >>> set_charts_base_dir()
+        # Reset to default charts/ directory
+    """
+    global CHARTS_DIR
+    if subfolder:
+        CHARTS_DIR = ROOT_DIR / 'charts' / subfolder
+    else:
+        CHARTS_DIR = ROOT_DIR / 'charts'
+
+
 def ensure_charts_dir(subdir: str = None) -> Path:
     """
     Create charts directory (and optional subdirectory) if it doesn't exist.

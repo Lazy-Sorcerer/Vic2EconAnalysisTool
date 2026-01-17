@@ -21,15 +21,19 @@ Generate specific categories:
     $ python plot_all.py --countries   # All country charts
     $ python plot_all.py --country ENG # Just England
 
+Output to a subfolder (useful for multiple game sessions):
+    $ python plot_all.py --subfolder MP_game_01  # Output to charts/MP_game_01/
+
 COMMAND-LINE OPTIONS
 ====================
 
-    --all           Generate all charts (default if no options given)
-    --global        Generate global statistics charts (charts/global/)
-    --market        Generate world market charts (charts/market/)
-    --countries     Generate all country + comparison charts
-    --comparisons   Generate comparison charts only (charts/comparisons/)
-    --country TAG   Generate charts for a specific country (e.g., ENG, FRA)
+    --all              Generate all charts (default if no options given)
+    --global           Generate global statistics charts (charts/global/)
+    --market           Generate world market charts (charts/market/)
+    --countries        Generate all country + comparison charts
+    --comparisons      Generate comparison charts only (charts/comparisons/)
+    --country TAG      Generate charts for a specific country (e.g., ENG, FRA)
+    --subfolder NAME   Output to charts/NAME/ instead of charts/
 
 OUTPUT DIRECTORY STRUCTURE
 ==========================
@@ -128,6 +132,7 @@ from plot_countries import (
     plot_all_comparisons,
     plot_all_countries,
 )
+from utils import set_charts_base_dir
 
 
 def main():
@@ -154,12 +159,13 @@ Output structure:
   charts/comparisons/     - Cross-country comparisons
 
 Examples:
-  python plot_all.py                  # Generate all charts
-  python plot_all.py --global         # Generate global statistics only
-  python plot_all.py --market         # Generate world market charts only
-  python plot_all.py --countries      # Generate all country + comparison charts
-  python plot_all.py --comparisons    # Generate comparison charts only
-  python plot_all.py --country ENG    # Generate charts for England only
+  python plot_all.py                           # Generate all charts
+  python plot_all.py --global                  # Generate global statistics only
+  python plot_all.py --market                  # Generate world market charts only
+  python plot_all.py --countries               # Generate all country + comparison charts
+  python plot_all.py --comparisons             # Generate comparison charts only
+  python plot_all.py --country ENG             # Generate charts for England only
+  python plot_all.py --subfolder MP_game_01    # Output to charts/MP_game_01/
         """
     )
 
@@ -176,8 +182,14 @@ Examples:
                        help='Generate charts for specific country (e.g., ENG)')
     parser.add_argument('--all', action='store_true',
                        help='Generate all charts')
+    parser.add_argument('--subfolder', type=str,
+                       help='Output subfolder within charts/ (e.g., MP_game_01)')
 
     args = parser.parse_args()
+
+    # Set custom output subfolder if specified
+    if args.subfolder:
+        set_charts_base_dir(args.subfolder)
 
     # ==== DEFAULT TO --all IF NO OPTIONS ====
     if not any([args.do_global, args.market, args.countries, args.comparisons,
@@ -187,6 +199,8 @@ Examples:
     # ==== PRINT HEADER ====
     print("=" * 60)
     print("Victoria 2 Economic Data Visualization")
+    if args.subfolder:
+        print(f"Output subfolder: {args.subfolder}")
     print("=" * 60)
 
     # ==== DETERMINE SECTIONS TO GENERATE ====
@@ -245,11 +259,12 @@ Examples:
 
     # ==== PRINT SUMMARY ====
     print("\n" + "=" * 60)
-    print("Charts saved to 'charts/' directory:")
-    print("  charts/global/        - Global statistics")
-    print("  charts/market/        - World market data")
-    print("  charts/comparisons/   - Country comparisons")
-    print("  charts/countries/*/   - Individual country data")
+    base_path = f"charts/{args.subfolder}" if args.subfolder else "charts"
+    print(f"Charts saved to '{base_path}/' directory:")
+    print(f"  {base_path}/global/        - Global statistics")
+    print(f"  {base_path}/market/        - World market data")
+    print(f"  {base_path}/comparisons/   - Country comparisons")
+    print(f"  {base_path}/countries/*/   - Individual country data")
     print("=" * 60)
 
 
