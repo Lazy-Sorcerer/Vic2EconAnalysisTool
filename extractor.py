@@ -62,6 +62,7 @@ POP TYPES AND ECONOMIC ROLES
 | officers    | 10 | Military leadership                     |
 | soldiers    | 11 | Military personnel                      |
 | slaves      | 12 | Unfree labor (in slave-holding nations) |
+| neets       | 13 | Unemployed (Crimea mod)                 |
 
 Note: Some POP types have alternate IDs in different contexts (clerks: 5 or 6).
 
@@ -116,6 +117,7 @@ POP_TYPES = {
     'officers': 10,     # Military officers - lead military units
     'soldiers': 11,     # Military soldiers - form military units
     'slaves': 12,       # Slaves - unfree labor in slave-holding nations
+    'neets': 13,        # NEETs - Not in Education, Employment, or Training (Crimea mod)
 }
 
 # Reverse mapping: ID to type name (for parsing save files that use numeric IDs)

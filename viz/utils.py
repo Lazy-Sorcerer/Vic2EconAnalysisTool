@@ -56,7 +56,7 @@ Uses the 'ggplot' style with customizations:
 
 Color Palettes:
 - COUNTRY_COLORS: Distinctive colors for major nations
-- POP_TYPE_COLORS: Colors representing each of 13 POP types
+- POP_TYPE_COLORS: Colors representing each of 14 POP types
 - COMMODITY_COLORS: Colors for raw/industrial/consumer goods
 
 USAGE EXAMPLES
@@ -612,6 +612,7 @@ POP_TYPE_COLORS = {
 
     # Other
     'slaves': '#696969',         # Dim Gray - unfortunate reality
+    'neets': '#778899',          # Light Slate Gray - unemployed (Crimea mod)
 }
 
 # Commodity colors by category

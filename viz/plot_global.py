@@ -12,7 +12,7 @@ Population Charts:
     - global_total_population.png: World population over time
     - population_by_type.png: Stacked area by POP type (farmers, craftsmen, etc.)
     - population_composition.png: Same as above, but as percentages (0-100%)
-    - pop_{type}.png: Individual chart for each of 13 POP types
+    - pop_{type}.png: Individual chart for each of 14 POP types
 
 Wealth Charts:
     - global_total_pop_money.png: Cash held by all POPs
