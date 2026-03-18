@@ -27,3 +27,4 @@ CLAUDE.md
 saves/
 output/
 charts/
+__pycache__/
